@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Lab4.Hubs;
+using Lab4.Context;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -9,6 +11,7 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 
 namespace Lab4
 {
@@ -31,7 +34,12 @@ namespace Lab4
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+            string userMessageTable = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=ChatMessages;Integrated Security=True;" +
+                "Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
 
+            services.AddDbContext<UserMessageContext>(options => options.UseSqlServer(userMessageTable));
+
+            services.AddSignalR();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
@@ -52,7 +60,13 @@ namespace Lab4
             app.UseStaticFiles();
             app.UseCookiePolicy();
 
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<ChatHub>("/chatHub");
+            });
+
             app.UseMvc();
+            
         }
     }
 }
