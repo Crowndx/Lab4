@@ -37,6 +37,7 @@ namespace Lab4
             string userMessageTable = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=ChatMessages;Integrated Security=True;" +
                 "Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
 
+
             services.AddDbContext<UserMessageContext>(options => options.UseSqlServer(userMessageTable));
 
             services.AddSignalR();
