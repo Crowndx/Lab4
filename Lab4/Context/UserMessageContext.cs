@@ -13,6 +13,6 @@ namespace Lab4.Context
         {
 
         }
-        public DbSet<UserMessageModel> Messages { get; set; }
+        public DbSet<UserMessageModel> Message { get; set; }
     }
 }

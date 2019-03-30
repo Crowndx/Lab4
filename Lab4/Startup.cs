@@ -66,8 +66,7 @@ namespace Lab4
                 routes.MapHub<ChatHub>("/chatHub");
             });
 
-            app.UseMvc();
-            
+            app.UseMvc();    
         }
     }
 }

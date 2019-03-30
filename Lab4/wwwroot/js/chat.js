@@ -5,15 +5,7 @@ var connection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
 //Disable send button until connection is established
 document.getElementById("sendButton").disabled = true;
 document.getElementById("disconnectButton").disabled = false;
-var connected = false;
 
-connection.on("ReceiveMessage", function (user, message, dateTime) {
-    var msg = message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    var encodedMsg = user + " says " + msg + " at " + dateTime;
-    var li = document.createElement("li");
-    li.textContent = encodedMsg;
-    document.getElementById("messagesList").appendChild(li);
-});
 connection.on("UniqueName", function () {
     var encodedMsg = "That user name is in use";
     var li = document.createElement("li");
@@ -21,7 +13,7 @@ connection.on("UniqueName", function () {
     document.getElementById("messagesList").appendChild(li);
 });
 
-connection.on("ConnectionMessage", function (user, message, dateTime) {
+connection.on("Message", function (user, message, dateTime) {
     var msg = message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     var encodedMsg = user + " " + msg + " at " + dateTime;
     var li = document.createElement("li");
@@ -29,15 +21,28 @@ connection.on("ConnectionMessage", function (user, message, dateTime) {
     document.getElementById("messagesList").appendChild(li);
 });
 
-connection.on("DisconnectionMessage", function (user, message, dateTime) {
-    var msg = message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    var encodedMsg = user + " " + msg + " at " + dateTime;
+connection.on("Login", function () {
+    var encodedMsg = "You must login before you can send a message";
     var li = document.createElement("li");
     li.textContent = encodedMsg;
     document.getElementById("messagesList").appendChild(li);
 });
-connection.on("Login", function () {
-    var encodedMsg = "You must login before you can send a message";
+
+connection.on("ValidName", function () {
+    var encodedMsg = "Your username must only contain letters";
+    var li = document.createElement("li");
+    li.textContent = encodedMsg;
+    document.getElementById("messagesList").appendChild(li);
+});
+
+connection.on("NotConnected", function () {
+    var encodedMsg = "You are not connected";
+    var li = document.createElement("li");
+    li.textContent = encodedMsg;
+    document.getElementById("messagesList").appendChild(li);
+});
+connection.on("BlankName", function () {
+    var encodedMsg = "You must enter a username";
     var li = document.createElement("li");
     li.textContent = encodedMsg;
     document.getElementById("messagesList").appendChild(li);

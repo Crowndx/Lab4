@@ -5,13 +5,13 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using Lab4.Context;
 using Lab4.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Lab4.Hubs
 {
     public class ChatHub : Hub
     {
-        // Supposed to hold all the users "currently" logged into the chat
-        List<string> currentUsers = new List<string>();
+        private static List<string> currentUsers = new List<string>();
 
         // Supposed to be my db connection context
         private readonly UserMessageContext _userMessageContext;
@@ -29,20 +29,18 @@ namespace Lab4.Hubs
         [HubMethodName("SendMessage")]
         public async Task SendMessageAsync(string user, string message)
         {
-            // Commented this code out so the application will allow you to actually send messages for testing purposes
-            //if (currentUsers.Contains(user))
-            //{
-                var dateTime = DateTimeOffset.Now;
+            if (currentUsers.Contains(user))
+            {
                 UserMessageModel userMessage = new UserMessageModel(user, message);
-                await Clients.All.SendAsync("ReceiveMessage", user, message, dateTime.ToString("yyyy-MM-dd hh:mm:ss"));
-                // Supposed to add my messages to my db but does nothing
-                _userMessageContext.Messages.Add(userMessage);
+                await SendMessageAllClientsAsync(userMessage);
+               
+                _userMessageContext.Message.Add(userMessage);
                 await _userMessageContext.SaveChangesAsync();
-            //}
-            //else
-            //{
-                //await Clients.Caller.SendAsync("Login");
-            //}       
+            }
+            else
+            {
+                await Clients.Caller.SendAsync("Login");
+            }       
         }
 
         /// <summary>
@@ -57,15 +55,25 @@ namespace Lab4.Hubs
             {
                 await Clients.Caller.SendAsync("UniqueName");
             }
+            else if (user.Trim() == "")
+            {
+                await Clients.Caller.SendAsync("BlankName");
+            }
             else
             {
-                //TODO Retrieve all previous messages in DB
-                //TODO Output all previous messages to clients that "Connected"
+                var messages = await _userMessageContext.Message.ToListAsync();
+                foreach(var oneMessage in messages)
+                {
+                    await Clients.Caller.SendAsync("Message", oneMessage.UserName, oneMessage.UserMessage, oneMessage.Sent);
+                }
+
                 currentUsers.Add(user);
-                var dateTime = DateTimeOffset.Now.ToString("yyyy-MM-dd hh:mm:ss");
                 string message = "connected";
-                await Clients.All.SendAsync("ConnectionMessage", user, message, dateTime);
-                //TODO Update DB with new connected message
+                UserMessageModel userMessage = new UserMessageModel(user, message);
+                await SendMessageAllClientsAsync(userMessage);
+
+                _userMessageContext.Message.Add(userMessage);
+                await _userMessageContext.SaveChangesAsync();
             }
         }
 
@@ -77,12 +85,27 @@ namespace Lab4.Hubs
         [HubMethodName("OnDisconnect")]
         public async Task OnDisconnectAsync(string user)
         {
-            currentUsers.Remove(user);
-            var dateTime = DateTimeOffset.Now.ToString("yyyy-MM-dd hh:mm:ss");
-            string message = "disconnected";
-            await Clients.All.SendAsync("DisconnectionMessage", user, message, dateTime);
-            //TODO UPDATE DB with new disconnected message
-            //TODO CLEAR Webpage message list for client that "disconnected"
+            if (currentUsers.Contains(user))
+            {
+                currentUsers.Remove(user);
+                string message = "disconnected";
+                UserMessageModel userMessage = new UserMessageModel(user, message);
+                await SendMessageAllClientsAsync(userMessage);
+
+                _userMessageContext.Message.Add(userMessage);
+                await _userMessageContext.SaveChangesAsync();
+            }
+            else
+            {
+                await Clients.Caller.SendAsync("NotConnected");
+            }
         }
+
+        private async Task SendMessageAllClientsAsync(UserMessageModel userMessage)
+        {
+            await Clients.All.SendAsync("Message", userMessage.UserName.ToString(), 
+                userMessage.UserMessage.ToString(), userMessage.Sent.ToString("yyyy-MM-dd hh:mm:ss"));
+        }
+
     }
 }

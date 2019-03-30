@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -8,9 +9,16 @@ namespace Lab4.Models
 {
     public class UserMessageModel
     {
-        //DB Table has an auto increment Id as the primary key
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
+        [Required]
+        [StringLength(10)]
         public string UserName { get; set; }
+        [Required]
+        [StringLength(140)]
         public string UserMessage { get; set; }
+        [Required]
         public DateTimeOffset Sent { get; set; }
         public UserMessageModel()
         {
