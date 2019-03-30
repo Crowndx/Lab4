@@ -12,6 +12,9 @@ connection.on("UniqueName", function () {
     li.textContent = encodedMsg;
     document.getElementById("messagesList").appendChild(li);
 });
+connection.on("ClearChat", function () {
+    document.getElementById("messagesList").innerHTML = "";
+});
 
 connection.on("Message", function (user, message, dateTime) {
     var msg = message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
